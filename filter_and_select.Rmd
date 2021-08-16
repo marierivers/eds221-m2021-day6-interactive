@@ -45,9 +45,9 @@ ex_2 <- penguins %>%
 ex_2_alt <- penguins %>% 
   filter(species - "Chinstrap" & year == 2008)
 # or
-ex_2_alt2 <- penguins %>% 
+#ex_2_alt2 <- penguins %>% 
   filter(species == "Chinstrap" %>% 
-           filter(year == 2008))
+           filter(year == "2008"))
 ```
 3. Exclude Gentoos  
 Keep observations if the penguin species is NOT "Gentoo"
@@ -141,5 +141,67 @@ ex_11 <- penguins %>%
   mutate(bill_depth_mm = as.character(bill_depth_mm))
 # mutate(bill_depth_mm = is.numeric(bill_depth_mm) is ASKING "is this numeric?" and the output would be TRUE or FALSE
 class(ex_11$bill_depth_mm)
+```
+### mutate for adding new columns or changing exisitng columns
+
+### case_when(): your favorite if-else  
+12. Create a new column that contains "small" if penguin flipper length is less than 185 mm, "medium" otherwise
+```{r}
+ex_12 <- penguins %>% 
+  mutate(binned_size = case_when(
+    flipper_length_mm < 185 ~ "small", # the `~` symbol means "then"
+    flipper_length_mm >= 185 ~ "medium"
+  ))
+```
+Task: Starting from penguins, create a new column "bird_bill_bin" that contains:  
+- If bill length < 38mm: "short bill"
+- If bill length >= 38mm < 43mm: "medium bill"
+- If bill length >= 43mm: "long bill"
+```{r}
+# `case_when()`
+bill_bin <- penguins %>% 
+  mutate(bird_bill_bin = case_when(
+    bill_length_mm < 38 ~ "short bill",
+    bill_length_mm >= 38 & bill_length_mm < 43 ~ "medium bill", # or could use the "between" function 
+    bill_length_mm >= 43 ~ "long bill"
+  ))
+# to populate values where "anything else is true" the last line would be TRUE ~ "long bill" (this includes NA values)
+```
+### group_by() %>% summarize() to find summay values by group, and return them in a nice summary table
+```{r}
+mean(penguins$bill_depth_mm, na.rm = TRUE)
+```
+13. Use `group_by()` to say there are groups within the species column
+Create a summary table by given groups
+```{r}
+# group_by() doesn't actually change the structure or content of your data frame
+ex_13 <- penguins %>% 
+  group_by(species, island) %>% # group by species and island 
+  summarize(mean_flipper_length = mean(flipper_length_mm, na.rm = TRUE),
+            sd_flipper_length = sd(flipper_length_mm, na.rm = TRUE)) # give column names to the output table
+ex_13
+```
+```{r}
+# add a new column with the mean flipper lenght of the species in the observation
+penguins %>%
+  group_by(species) %>% 
+  mutate(mean_flipper_length = mean(flipper_length_mm, na.rm = TRUE))
+```
+
+## Practice  
+In a single piped sequence:
+- only keep penguins that have a body mass > 3500 g
+- only keep columns for species, flipper_lenght_mm, and sex
+- create a summary table that contains the mean, standard deviation, max, and min value of flipper length by species and sex (as the grouping variables)
+```{r}
+ex_14 <- penguins %>% 
+  filter(body_mass_g > 3500) %>%
+  select(species, flipper_length_mm, sex) %>% 
+  group_by(species, sex) %>% 
+  summarize(mean_flipper_length = mean(flipper_length_mm, na.rm = TRUE),
+            sd_flipper_length = sd(flipper_length_mm, na.rm = TRUE),
+            max_flipper_length = max(flipper_length_mm),
+            min_flipper_length = min(flipper_length_mm))
+ex_14
 ```
 
