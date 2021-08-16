@@ -1,0 +1,20 @@
+---
+title: "Tidying data"
+author: "Marie Rivers"
+date: "8/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(here)
+```
+
+Read in wb_indicators.csv file. Make sure to specify `na = c("..", "")`
+wb is World Back
+
+```{r}
+wb_indicators <- read_csv(here("data", "wb_indicators.csv"), na = c("..", "")) # used a vector of common missing values
+```
+
