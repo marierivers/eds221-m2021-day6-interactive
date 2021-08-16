@@ -1,0 +1,145 @@
+---
+title: "data_wrangling"
+author: "Marie Rivers"
+date: "8/16/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(palmerpenguins)
+```
+
+Look at `us_rent_income` (built-in to the `tidyr` package). Make a tidy version. Then from your tidy version, get it back to the original structure
+```{r}
+us_rent_wide <- us_rent_income %>% 
+  select(-moe) %>% 
+  pivot_wider(names_from = variable, values_from = estimate)
+```
+
+## Practice some tidyverse functions for data wrangling
+
+- `filter()`
+- `select()`
+- `mitage()`
+- `case_when()`
+- `group_by() %>% summarize()`
+- piping things together in sequence
+
+### dplyr::filter() to keep or exclude rows based on our conditions
+
+1. Exact match (single condition)  
+Only keep observations (rows) where the island is Biscoe
+```{r}
+ex_1 <- filter(.data = penguins, island == "Biscoe") # island MATCHES Biscoe
+
+unique(ex_1$island)
+```
+2. "and" statement within filter  
+Only keep observations if the penguin species is Chinstrap AND the year is 2008
+```{r}
+ex_2 <- penguins %>% 
+  filter(species == "Chinstrap", year == 2008)
+# or
+ex_2_alt <- penguins %>% 
+  filter(species - "Chinstrap" & year == 2008)
+# or
+ex_2_alt2 <- penguins %>% 
+  filter(species == "Chinstrap" %>% 
+           filter(year == 2008))
+```
+3. Exclude Gentoos  
+Keep observations if the penguin species is NOT "Gentoo"
+```{r}
+ex_3 <- penguins %>% 
+  filter(species != "Gentoo")
+```
+Exercies: Create a subset from `penguins` that only contains observations from Adelie penguins with a flipper length greater than or equal to 185 mm.
+```{r}
+practice_1 <- penguins %>% 
+  filter(species == "Adelie", flipper_length_mm >= 185)
+```
+
+4. The %in% operator  
+Use the "in" `%in%` operator to look for *any* matches within a vector, and return TRUE if the value does exist for our row.  
+We want to keep observations wehre the island is Dream or Torgersen
+```{r}
+ex_4 <- penguins %>% 
+  filter(island %in% c("Dream", "Torgersen"))
+# it is VERY important to use %in% in this example so that in each row you only look for "Dream" or "Torgerson" instead of instances where "Dream" is followed by "Torgersen"
+```
+
+What would actually be happening if in the code above if you used `==` instead of `%in`
+
+## don't you double equal signs `==` with a vector becuase then filtering tries to match the order of that vector (ie instances where "Dream" is followed by "Torgersen")
+
+```{r}
+ex_4_only_biscoe <- penguins %>% 
+  filter(!island %in% c("Dream", "Torgersen"))
+```
+
+### select() to select or exclude COLUMNS  
+5. Keep a single column by name  
+Only want to keep the species column
+
+```{r}
+ex_5 <- penguins %>%  select(species)
+# or
+ex_5_alt <- select(.data = penguins, species)
+```
+
+6. Keep multiple columns by name  
+Create a subset that contains species, bill_length_mm through flipper_length_mm, and year  
+```{r}
+ex_6 <- penguins %>% 
+  select(species, bill_length_mm:flipper_length_mm, year)
+names(ex_6) # `names()` returns column names
+```
+
+7. Choose or exclude columns based on position
+```{r}
+ex_7 <- penguins %>% 
+  select(-4) # select everything except for column 4
+```
+
+8. A piped sequence  
+Write a piped sequence where you first only keep columns for species, body_mass_gm, and island, and second: filter to only include observations if body_mass_g is greater than 3600.
+```{r}
+ex_8 <- penguins %>% 
+  select(species, body_mass_g, island) %>% 
+  filter(body_mass_g >= 3600)
+```
+
+### `mutate()` to add or update existing columns, while keeping the ones already there  
+9. Add a column that has body mass coverted to kg  
+```{r}
+ex_9 <- penguins %>% 
+  mutate(body_mass_kg = body_mass_g / 1000,
+         flipper_length_m = flipper_length_mm /1000) 
+
+# start with name of new column. If you give it the name of a column that already exists within the data frame it will overwrite that column
+
+# use a single equal sign `=` because we aren't asking "does this match?"
+# you would need quotes abour the new column name if there was a space in the name, but otherwise you don't need quotes
+```
+
+10. Mutate to update an existing column
+(when in doubt create a new column)
+```{r}
+ex_10 <- penguins %>% 
+  mutate(island = str_replace(island, pattern = "sen", replacement = "HOORAY!"))
+# this can be helpful to fix typos or data entry errors
+
+ex_10_alt <- penguins %>% 
+  mutate(island_hooray = str_replace(island, pattern = "sen", replacement = "HOORAY!"))
+```
+
+11. Update the class of the bill depth column to character
+```{r}
+ex_11 <- penguins %>% 
+  mutate(bill_depth_mm = as.character(bill_depth_mm))
+# mutate(bill_depth_mm = is.numeric(bill_depth_mm) is ASKING "is this numeric?" and the output would be TRUE or FALSE
+class(ex_11$bill_depth_mm)
+```
+
